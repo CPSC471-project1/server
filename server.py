@@ -6,22 +6,19 @@ server_host = ''
 
 
 def main():
+    server_socket = socket(AF_INET, SOCK_STREAM)
+    # to allow reuse of socket's address('') in while loop
+    server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    # two parentheses due to bind() only accepting one argument and requiring a tuple
+    server_socket.bind((server_host, connection_port))
+    # set server_socket to listen for one connection
+    server_socket.listen(5)
+
+    print "server waiting for connection"
+
+    connection_socket, client_address = server_socket.accept()
+
     while True:
-        server_socket = socket(AF_INET, SOCK_STREAM)
-
-        #to allow reuse of socket's address('') in while loop
-        server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-
-        #two parentheses due to bind() only accepting one argument and requiring a tuple
-        server_socket.bind((server_host, connection_port))
-
-        #set server_socket to listen for one connection
-        server_socket.listen(5)
-
-        print "server waiting for connection"
-
-        connection_socket, client_address = server_socket.accept()
-
         data_socket = socket(AF_INET, SOCK_STREAM)
         data_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         data_socket.bind((server_host, data_port))
