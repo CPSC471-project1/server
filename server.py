@@ -12,10 +12,10 @@ def main():
         #to allow reuse of socket's address('') in while loop
         server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
-        # two parentheses due to bind() only accepting one argument and requiring a tuple
-        server_socket.bind(('', connection_port))
+        #two parentheses due to bind() only accepting one argument and requiring a tuple
+        server_socket.bind((server_host, connection_port))
 
-        # set server_socket to listen for one connection
+        #set server_socket to listen for one connection
         server_socket.listen(5)
 
         print "server waiting for connection"
@@ -24,7 +24,7 @@ def main():
 
         data_socket = socket(AF_INET, SOCK_STREAM)
         data_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        data_socket.bind(('', data_port))
+        data_socket.bind((server_host, data_port))
         data_socket.listen(5)
         print "server waiting for data"
 
@@ -45,5 +45,7 @@ def main():
         s.close()
         data_socket.close()
         connection_socket.close()
+
+
 if __name__ == "__main__":
     main()
