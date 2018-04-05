@@ -1,4 +1,5 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
+from time import sleep
 import os
 connection_port = 1025
 data_port = 1024
@@ -14,8 +15,10 @@ def main():
     connection_socket, client_address = server_socket.accept()
 
     while True:
-        data_socket = create_data_socket()
-        data_socket.listen(5)
+	
+
+	data_socket = create_data_socket()
+        data_socket.listen(5)        
         print "server waiting for data"
 
         # Keeps track of command requested
@@ -25,18 +28,24 @@ def main():
         if command[0] == "ls":
            ls()
         elif command[0] != "ls":
+	    
+	    sleep(0.005)
             s, a = data_socket.accept()
             if command[0] == "get":
+		sleep(0.005)
                 data = prepare_file(command[1], s)
                 send_file(data, s)
+		sleep(0.005)
             elif command[0] == "put":
                 data_length = receive_data_length(s)
                 data = receive_data(s, data_length)
                 print("finished receive")
                 write_file(data, command[1])
             print data
-            data_socket.close()
+	    data_socket.close()
             s.close()
+	    sleep(0.005)
+    
     connection_socket.close()
 
 
@@ -69,7 +78,7 @@ def receive_data(socket, data_length):
     data = ""
     print("in data length")
     print(data_length)
-    while len(data) < int(data_length):
+    while len(data) < float(data_length):
         tmpbuffer = socket.recv(3000)  # Receive 3000 bytes at a time. NEED TO MAKE THIS BIGGER RECEIVE SO IT DOES NOT
         data += tmpbuffer               # THAT IT DOES NOT TAKE TOO LONG FOR BIG FILES
         print("receiving...")
