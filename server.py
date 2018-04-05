@@ -1,8 +1,8 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
-
+import os
 connection_port = 1025
 data_port = 1024
-server_host = ''
+server_host = "localhost"
 
 
 def main():
@@ -18,42 +18,107 @@ def main():
         data_socket.listen(5)
         print "server waiting for data"
 
-        s, a = data_socket.accept()
+        # Keeps track of command requested
+        command = connection_socket.recv(40)
+        command = command.split()
 
-        data_length = receive_data_length(s)
+        if command[0] == "ls":
+           ls()
+        elif command[0] != "ls":
+            s, a = data_socket.accept()
+            if command[0] == "get":
+                data = prepare_file(command[1], s)
+                send_file(data, s)
+            elif command[0] == "put":
+                data_length = receive_data_length(s)
+                data = receive_data(s, data_length)
+                print("finished receive")
+                write_file(data, command[1])
+            print data
+            data_socket.close()
+            s.close()
+    connection_socket.close()
 
-        data = receive_data(s, data_length)
-        print data
 
-        s.close()
-        data_socket.close()
-        connection_socket.close()
-
+# Create a server socket for client connection.
 def create_server_socket():
     server_socket = socket(AF_INET, SOCK_STREAM)
     server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     server_socket.bind((server_host, connection_port))
     return server_socket
 
+
+# Create a data socket for sending data to and from client.
 def create_data_socket():
     data_socket = socket(AF_INET, SOCK_STREAM)
     data_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     data_socket.bind((server_host, data_port))
     return data_socket
 
+
+# Receive length of data from client.
 def receive_data_length(socket):
     data_length = ""
     data_length += socket.recv(255)
-    data_length = int(data_length)
+    # data_length = int(data_length)
     return data_length
+
 
 def receive_data(socket, data_length):
     tmpbuffer = ""
     data = ""
-    while len(data) < data_length - 1:
-        tmpbuffer = socket.recv(40)
-        data += tmpbuffer
+    print("in data length")
+    print(data_length)
+    while len(data) < int(data_length):
+        tmpbuffer = socket.recv(3000)  # Receive 3000 bytes at a time. NEED TO MAKE THIS BIGGER RECEIVE SO IT DOES NOT
+        data += tmpbuffer               # THAT IT DOES NOT TAKE TOO LONG FOR BIG FILES
+        print("receiving...")
+    print("done")
     return data
+
+
+# Get all the data in the file.
+def prepare_file(filename, data_socket):
+    file_size = os.stat(filename)
+    data_length = file_size.st_size
+    data_socket.send(str(file_size.st_size))
+    tmpbuffer = ""
+    data = ""
+    f = open(filename, "r")
+    tmpbuffer = f.readline()
+
+    while tmpbuffer:
+        data += tmpbuffer
+        tmpbuffer = f.readline()
+    return data
+
+
+# Send the file through the data_socket
+def send_file(data, data_socket):
+    data_sent = 0
+    while data_sent != len(data):
+        data_sent += data_socket.send(data[data_sent])
+
+
+# Gets length of file.
+def get_file_length(filename):
+    filesize = os.stat(filename)
+    return filesize
+
+
+def write_file(data, filename):
+    #buffer = "" #This variable checks for when all data has been written.
+    print("writing to file")
+    f = open("test3.txt", "w+")
+    f.write(data)
+    f.close()
+
+
+def ls():
+    dirs = os.listdir(os.curdir)
+    for file in dirs:
+        print file
+
 
 if __name__ == "__main__":
     main()
