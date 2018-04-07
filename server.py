@@ -26,10 +26,9 @@ def main():
         data_socket.listen(5)
         if command[0] == "ls":
             print("Read in ls")
-            sleep(0.005)
             data = ls()
-            s, a = data_socket.accept()
             print(len(data))
+            s, a = data_socket.accept()
             s.send(str(len(data)))
             send_file(data, s)
         elif command[0] != "ls":
