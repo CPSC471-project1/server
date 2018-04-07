@@ -30,7 +30,11 @@ def main():
             print(len(data))
             s, a = data_socket.accept()
             s.send(str(len(data)))
+	    sleep(0.005)
             send_file(data, s)
+	    data_socket.close()
+	    s.close()
+	    sleep(0.05)
         elif command[0] != "ls":
             s, a = data_socket.accept()
             sleep(0.005)
@@ -96,6 +100,7 @@ def prepare_file(filename, data_socket):
     file_size = os.stat(filename)
     data_length = file_size.st_size
     data_socket.send(str(file_size.st_size))
+    sleep(0.005)
     tmpbuffer = ""
     data = ""
     f = open(filename, "r")
