@@ -1,10 +1,16 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from time import sleep
-import os
+import os, sys
 
-connection_port = 1025
-data_port = 1024
+program_name = sys.argv[0]
+arguement = sys.argv[1:]
+count = len(arguement)
+
+connection_port = int(sys.argv[1])
+data_port = connection_port - 1
 server_host = "localhost"
+
+
 
 
 def main():
