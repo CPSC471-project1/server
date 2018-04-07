@@ -1,6 +1,7 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from time import sleep
 import os
+
 connection_port = 1025
 data_port = 1024
 server_host = "localhost"
@@ -15,37 +16,41 @@ def main():
     connection_socket, client_address = server_socket.accept()
 
     while True:
-	
 
-	data_socket = create_data_socket()
-        data_socket.listen(5)        
         print "server waiting for data"
-
         # Keeps track of command requested
-        command = connection_socket.recv(40)
+        command = connection_socket.recv(20)
         command = command.split()
-
+        print("received command")
+        data_socket = create_data_socket()
+        data_socket.listen(5)
         if command[0] == "ls":
-           ls()
-        elif command[0] != "ls":
-	    
-	    sleep(0.005)
+            print("Read in ls")
+            sleep(0.005)
+            data = ls()
             s, a = data_socket.accept()
+            print(len(data))
+            s.send(str(len(data)))
+            send_file(data, s)
+        elif command[0] != "ls":
+            s, a = data_socket.accept()
+            sleep(0.005)
             if command[0] == "get":
-		sleep(0.005)
+                sleep(0.005)
                 data = prepare_file(command[1], s)
                 send_file(data, s)
-		sleep(0.005)
+                sleep(0.005)
             elif command[0] == "put":
+
                 data_length = receive_data_length(s)
                 data = receive_data(s, data_length)
                 print("finished receive")
                 write_file(data, command[1])
             print data
-	    data_socket.close()
+            data_socket.close()
             s.close()
-	    sleep(0.005)
-    
+            sleep(0.005)
+
     connection_socket.close()
 
 
@@ -76,11 +81,12 @@ def receive_data_length(socket):
 def receive_data(socket, data_length):
     tmpbuffer = ""
     data = ""
+
     print("in data length")
     print(data_length)
     while len(data) < float(data_length):
         tmpbuffer = socket.recv(3000)  # Receive 3000 bytes at a time. NEED TO MAKE THIS BIGGER RECEIVE SO IT DOES NOT
-        data += tmpbuffer               # THAT IT DOES NOT TAKE TOO LONG FOR BIG FILES
+        data += tmpbuffer  # THAT IT DOES NOT TAKE TOO LONG FOR BIG FILES
         print("receiving...")
     print("done")
     return data
@@ -116,17 +122,19 @@ def get_file_length(filename):
 
 
 def write_file(data, filename):
-    #buffer = "" #This variable checks for when all data has been written.
+    # buffer = "" #This variable checks for when all data has been written.
     print("writing to file")
-    f = open("test3.txt", "w+")
+    f = open(filename, "w+")
     f.write(data)
     f.close()
 
 
 def ls():
+    data = ""
     dirs = os.listdir(os.curdir)
     for file in dirs:
-        print file
+        data += (file + "\n")
+    return data
 
 
 if __name__ == "__main__":
